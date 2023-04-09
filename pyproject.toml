@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "discord-openstack"
+version = "0.1.0"
+description = "ChatOps discord bot to request and provision Openstack resources"
+authors = ["Nhat Ngo <nhat@ngo.cx>"]
+readme = "README.md"
+packages = [{include = "discord_openstack"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-openstackclient = "^6.2"
+discord-py-interactions = "^4.4"
+python-dotenv = "^1.0.0"
+mysqlclient = "^2.1.1"
+sqlalchemy = "^2.0.9"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.2.2"
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
