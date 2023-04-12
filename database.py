@@ -31,6 +31,10 @@ class OpenStackCredential(Base):
         """Return a string representation of the model."""
         return f"<OpenStackCredential(username={self.username}, project_name={self.project_name}>"
 
+    def __getitem__(self, field):
+        """Return the value of a field."""
+        return self.__dict__[field]
+
 
 def init_db(DB_URI: str):
     """Initialise the database."""
@@ -60,8 +64,8 @@ async def find_user(
         OpenStackCredential.username == discord_user_id
     )
     async with async_session() as session:
-        result = await session.execute(stmt)
-        return result.fetchone()
+        result = (await session.execute(stmt)).first()
+        return result[0] if result is not None else None
 
 
 async def create_user(

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "discord-openstack"
-version = "0.2.0"
+version = "0.3.0"
 description = "ChatOps discord bot to request and provision Openstack resources"
 authors = ["Nhat Ngo <discordbot.awg4s@mail.ngo.cx>"]
 readme = "README.md"

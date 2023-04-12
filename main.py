@@ -19,9 +19,6 @@ bot = interactions.Client(
     default_scope=os.getenv("DISCORD_DEFAULT_GUILD_ID"),
 )
 
-# Setup database
-db = database.init_db(os.getenv("DB_URI"))
-
 
 @bot.event
 async def on_ready():
@@ -47,7 +44,7 @@ async def help(ctx: interactions.CommandContext):
 async def register(ctx: interactions.CommandContext):
     """Request enrolment to Midgard"""
     db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
-    os_client = cloud.init()
+    os_client = cloud.connect()
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     project_name = f"{os.getenv('OS_DEFAULT_GUILD_PREFIX')}_{ctx.author.user.id}"
@@ -102,6 +99,70 @@ async def register(ctx: interactions.CommandContext):
         )
     # Close database connection
     await db_engine.dispose()
+    os_client.close()
+
+
+@midgard.group(name="set")
+async def set(ctx: interactions.CommandContext):
+    """Set group command"""
+    pass
+
+
+@set.subcommand(
+    name="keypair",
+    description="Set your SSH-public key in Midgard",
+    options=[
+        interactions.Option(
+            name="public_key",
+            description="Your SSH public key",
+            type=interactions.OptionType.STRING,
+            required=True,
+        )
+    ],
+)
+async def keypair(ctx: interactions.CommandContext, public_key: str):
+    """Set your SSH-public key in Midgard"""
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    if user is None:
+        await ctx.send(
+            f"<@{ctx.author.user.id}> You need to register first. Use `/midgard register` to do so."
+        )
+    else:
+        os_client = cloud.connect(
+            auth_url=os.getenv("OS_AUTH_URL"),
+            region_name=os.getenv("OS_REGION_NAME"),
+            project_name=user.project_name,
+            username=user.username,
+            password=user.password,
+            user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
+            project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
+        )
+
+        keypair = await cloud.find_keypair(os_client)
+        # Create a new keypair if it doesn't exist
+        if keypair is None:
+            try:
+                await cloud.create_keypair(os_client, public_key)
+                await ctx.send(
+                    f"<@{ctx.author.user.id}> Your public key has been updated!"
+                )
+            except Exception as e:
+                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+        # Update the keypair if it exists
+        else:
+            await cloud.delete_keypair(os_client, keypair)
+            try:
+                await cloud.create_keypair(os_client, public_key)
+                await ctx.send(
+                    f"<@{ctx.author.user.id}> Your public key has been updated!"
+                )
+            except Exception as e:
+                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
 
 
 bot.start()

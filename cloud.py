@@ -1,11 +1,5 @@
 # OpenStack Cloud helper functions
 import asyncio
-
-import keystoneauth1
-from keystoneauth1.identity import v3
-from keystoneclient.v3 import client as keystone_client
-from neutronclient.v2_0 import client as neutron_client
-
 import openstack
 
 
@@ -19,11 +13,32 @@ DEFAULT_NETWORK_NAME = "midgard-net"
 DEFAULT_SUBNET_NAME = "midgard-subnet"
 DEFAULT_DNS_NAMESERVERS = ["1.1.1.1", "1.0.0.1"]
 DEFAULT_IP_VERSION = 4
+DEFAULT_KEYPAIR_NAME = "midgard-keypair"
+DEFAUT_KEYPAIR_TYPE = "ssh"
 
 
-def init():
-    """Get an OpenStack client."""
-    return openstack.connect(cloud="envvars")
+def connect(
+    auth_url: str = None,
+    region_name: str = None,
+    project_name: str = None,
+    username: str = None,
+    password: str = None,
+    user_domain: str = None,
+    project_domain: str = None,
+):
+    """Connect to an OpenStack client."""
+    if not (auth_url or region_name or project_name or username or password):
+        return openstack.connect(cloud="envvars")
+    else:
+        return openstack.connect(
+            auth_url=auth_url,
+            region_name=region_name,
+            project_name=project_name,
+            username=username,
+            password=password,
+            user_domain_name=user_domain,
+            project_domain_name=project_domain,
+        )
 
 
 async def find_user(client: openstack.connection.Connection, discord_user_id: str):
@@ -106,3 +121,36 @@ async def setup_default_network(
     await asyncio.to_thread(
         client.network.add_interface_to_router, router, subnet_id=subnet.id
     )
+
+
+async def find_keypair(client: openstack.connection.Connection):
+    """Find a keypair in a project."""
+    return await asyncio.to_thread(
+        client.compute.find_keypair,
+        DEFAULT_KEYPAIR_NAME,
+        ignore_missing=True,
+    )
+
+
+async def create_keypair(
+    client: openstack.connection.Connection,
+    public_key: str,
+) -> None:
+    """Create a new keypair for a project."""
+    try:
+        await asyncio.to_thread(
+            client.compute.create_keypair,
+            name=DEFAULT_KEYPAIR_NAME,
+            public_key=public_key,
+            type=DEFAUT_KEYPAIR_TYPE,
+        )
+    except openstack.exceptions.BadRequestException as e:
+        raise Exception(e.details)
+
+
+async def delete_keypair(
+    client: openstack.connection.Connection,
+    keypair: openstack.compute.v2.keypair.Keypair,
+) -> None:
+    """Delete a keypair from a project."""
+    await asyncio.to_thread(client.compute.delete_keypair, keypair)

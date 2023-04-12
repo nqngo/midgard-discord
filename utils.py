@@ -2,7 +2,6 @@
 
 import string
 import secrets
-import keystoneauth1
 
 
 def try_except(success, failure, *exceptions):
