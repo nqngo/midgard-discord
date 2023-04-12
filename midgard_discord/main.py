@@ -16,7 +16,7 @@ load_dotenv()
 CACHE_TTL = os.getenv("DB_CACHE_TTL")
 bot = interactions.Client(
     token=os.getenv("DISCORD_TOKEN"),
-    default_scope=os.getenv("DISCORD_DEFAULT_GUILD_ID"),
+    default_scope=os.getenv("DISCORD_DEFAULT_GUILD_ID").split(","),
 )
 
 
@@ -103,6 +103,150 @@ async def register(ctx: interactions.CommandContext):
     # Close database connection
     await db_engine.dispose()
     os_client.close()
+
+
+@midgard.subcommand(
+    name="launch",
+    description="Create a VM server",
+    options=[
+        interactions.Option(
+            name="flavor",
+            description="The flavor of the server",
+            type=interactions.OptionType.STRING,
+            required=True,
+            autocomplete=True,
+        ),
+        interactions.Option(
+            name="image",
+            description="The image of the server",
+            type=interactions.OptionType.STRING,
+            required=True,
+            autocomplete=True,
+        ),
+    ],
+)
+@interactions.autodefer()
+async def launch(ctx: interactions.CommandContext, flavor: str, image: str):
+    """Create a VM server"""
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    if user is None:
+        await ctx.send(
+            f"<@{ctx.author.user.id}> You need to register first. Use `/midgard register` to do so."
+        )
+    else:
+        os_client = cloud.connect(
+            auth_url=os.getenv("OS_AUTH_URL"),
+            region_name=os.getenv("OS_REGION_NAME"),
+            project_name=user.project_name,
+            username=user.username,
+            password=user.password,
+            user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
+            project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
+        )
+
+        server = await cloud.find_server(os_client)
+        if server is not None:
+            if server.status == "ACTIVE":
+                await ctx.send(
+                    f"<@{ctx.author.user.id}> Your server is already running."
+                )
+            else:
+                await ctx.send(
+                    f"<@{ctx.author.user.id}> Your server is currently {server.status}."
+                )
+        else:
+            keypair = await cloud.find_keypair(os_client)
+            security_group = await cloud.find_default_security_group(os_client)
+            try:
+                server = await cloud.create_server(
+                    os_client,
+                    key_name=keypair.name,
+                    flavor=flavor,
+                    image=image,
+                    auto_ip=True,
+                    security_groups=[security_group.name],
+                    reuse_ips=True,
+                    wait=True,
+                )
+                await ctx.send(
+                    f"<@{ctx.author.user.id}> Your server is ready!", ephemeral=True
+                )
+            except Exception as e:
+                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+
+        # except Exception as e:
+        #     await ctx.send(f"<@{ctx.author.user.id}> {e}")
+
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
+
+
+@launch.autocomplete("flavor")
+async def launch_flavor_autocomplete(
+    ctx: interactions.CommandContext, user_input: str = ""
+):
+    """Autocomplete for create server flavor"""
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    os_client = cloud.connect(
+        auth_url=os.getenv("OS_AUTH_URL"),
+        region_name=os.getenv("OS_REGION_NAME"),
+        project_name=user.project_name,
+        username=user.username,
+        password=user.password,
+        user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
+        project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
+    )
+
+    flavors = await cloud.list_flavors(os_client)
+
+    choices = [
+        interactions.Choice(
+            name=f"{flavor.name} ({flavor.vcpus} vCPUs, {flavor.ram/1024}GB RAM, {flavor.disk}GB HDD)",
+            value=flavor.id,
+        )
+        for flavor in flavors
+        if user_input in flavor.name
+    ]
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
+    await ctx.populate(choices)
+
+
+@launch.autocomplete("image")
+async def launch_image_autocomplete(
+    ctx: interactions.CommandContext, user_input: str = ""
+):
+    """Autocomplete for create server image"""
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    os_client = cloud.connect(
+        auth_url=os.getenv("OS_AUTH_URL"),
+        region_name=os.getenv("OS_REGION_NAME"),
+        project_name=user.project_name,
+        username=user.username,
+        password=user.password,
+        user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
+        project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
+    )
+
+    images = await cloud.list_images(os_client)
+
+    choices = [
+        interactions.Choice(name=image.name, value=image.id)
+        for image in images
+        if user_input in image.name
+    ]
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
+    await ctx.populate(choices)
 
 
 @midgard.group(name="add")

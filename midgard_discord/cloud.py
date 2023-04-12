@@ -19,6 +19,7 @@ DEFAULT_SG_DIRECTION = "ingress"
 DEFAULT_SG_PROTOCOL = "tcp"
 DEFAULT_SG_NAME = "default"
 DEFAULT_SG_REMOTE_IP_PREFIX = "0.0.0.0/0"
+DEFAULT_SERVER_NAME = "midgard-server"
 
 
 def connect(
@@ -134,6 +135,17 @@ async def setup_default_network(
     )
 
 
+async def find_default_network(
+    client: openstack.connection.Connection,
+    **kwargs,
+) -> openstack.network.v2.network.Network:
+    """Find default network for a project."""
+
+    return await asyncio.to_thread(
+        client.network.find_network, DEFAULT_NETWORK_NAME, ignore_missing=True, **kwargs
+    )
+
+
 async def add_security_group_rule(
     client: openstack.connection.Connection,
     project: openstack.identity.v3.project.Project,
@@ -161,6 +173,24 @@ async def add_security_group_rule(
         )
     except openstack.exceptions.ConflictException as e:
         raise Exception(e.details.split(".")[0] + ".")
+
+
+async def find_default_security_group(
+    client: openstack.connection.Connection,
+    **kwargs,
+) -> openstack.network.v2.security_group.SecurityGroup:
+    """Find default security group for a project."""
+    return await asyncio.to_thread(
+        client.network.find_security_group, DEFAULT_SG_NAME, **kwargs
+    )
+
+
+async def find_floating_ip(
+    client: openstack.connection.Connection,
+    **kwargs,
+) -> openstack.network.v2.floating_ip.FloatingIP:
+    """Retrun the first available floating IP"""
+    return await asyncio.to_thread(client.available_floating_ip, **kwargs)
 
 
 async def find_keypair(client: openstack.connection.Connection):
@@ -194,3 +224,46 @@ async def delete_keypair(
 ) -> None:
     """Delete a keypair from a project."""
     await asyncio.to_thread(client.compute.delete_keypair, keypair)
+
+
+async def list_flavors(
+    client: openstack.connection.Connection,
+) -> list[openstack.compute.v2.flavor.Flavor]:
+    """List all flavors."""
+    flavors = await asyncio.to_thread(client.compute.flavors)
+    return [flavor for flavor in flavors]
+
+
+async def list_images(
+    client: openstack.connection.Connection,
+) -> list[openstack.image.v2.image.Image]:
+    """List all images."""
+    images = await asyncio.to_thread(client.image.images)
+    return [image for image in images]
+
+
+async def find_server(
+    client: openstack.connection.Connection,
+    name: str = None,
+    **kwargs,
+) -> openstack.compute.v2.server.Server:
+    """Find a server in a project."""
+    if name is None:
+        name = DEFAULT_SERVER_NAME
+    return await asyncio.to_thread(
+        client.compute.find_server,
+        name,
+        ignore_missing=True,
+        **kwargs,
+    )
+
+
+async def create_server(
+    client: openstack.connection.Connection, **kwargs
+) -> openstack.compute.v2.server.Server:
+    """Create a new server in a project."""
+    name = kwargs.pop("name", DEFAULT_SERVER_NAME)
+    try:
+        return await asyncio.to_thread(client.create_server, name=name, **kwargs)
+    except openstack.exceptions.BadRequestException as e:
+        raise Exception(e.details)

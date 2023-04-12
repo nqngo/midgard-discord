@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "midgard-discord"
-version = "0.5.0"
+version = "0.6.2"
 description = "ChatOps discord bot to request and provision Openstack resources in MidgardLab"
 authors = ["Nhat Ngo <discordbot.awg4s@mail.ngo.cx>"]
 readme = "README.md"
