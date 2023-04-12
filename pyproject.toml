@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "discord-openstack"
-version = "0.3.0"
-description = "ChatOps discord bot to request and provision Openstack resources"
+name = "midgard-discord"
+version = "0.4.0"
+description = "ChatOps discord bot to request and provision Openstack resources in MidgardLab"
 authors = ["Nhat Ngo <discordbot.awg4s@mail.ngo.cx>"]
 readme = "README.md"
-packages = [{include = "discord_openstack"}]
+packages = [{include = "midgard_discord"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,3 +22,6 @@ black = "^23.3.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+midgard = "midgard_discord.main:main"

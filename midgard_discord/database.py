@@ -1,11 +1,10 @@
 # Cache database functions
-import asyncio
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import DeclarativeBase, Mapped
-from sqlalchemy.orm import mapped_column, sessionmaker
+from sqlalchemy.orm import mapped_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
@@ -34,15 +33,6 @@ class OpenStackCredential(Base):
     def __getitem__(self, field):
         """Return the value of a field."""
         return self.__dict__[field]
-
-
-def init_db(DB_URI: str):
-    """Initialise the database."""
-    engine = create_engine(DB_URI)
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return session
 
 
 async def init_async_db(DB_URI: str) -> tuple[create_async_engine, async_sessionmaker]:

@@ -4,10 +4,10 @@ import interactions
 
 from dotenv import load_dotenv
 
-import cloud
-import database
-import texts
-import utils
+from midgard_discord import cloud
+from midgard_discord import database
+from midgard_discord import texts
+from midgard_discord import utils
 
 
 # Setup discord API
