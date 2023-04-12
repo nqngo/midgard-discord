@@ -69,6 +69,9 @@ async def register(ctx: interactions.CommandContext):
             # Setup default network
             await cloud.setup_default_network(os_client, os_project)
 
+            # Add SSH security group
+            await cloud.add_ssh_security_group(os_client, os_project, 22)
+
             # Cache user in database
             await database.create_user(
                 db_session,
@@ -102,22 +105,22 @@ async def register(ctx: interactions.CommandContext):
     os_client.close()
 
 
-@midgard.group(name="set")
-async def set(ctx: interactions.CommandContext):
+@midgard.group(name="add")
+async def add(ctx: interactions.CommandContext):
     """Set group command"""
     pass
 
 
-@set.subcommand(
+@add.subcommand(
     name="keypair",
-    description="Set your SSH-public key in Midgard",
+    description="Add your SSH-public key in Midgard",
     options=[
         interactions.Option(
             name="public_key",
             description="Your SSH public key",
             type=interactions.OptionType.STRING,
             required=True,
-        )
+        ),
     ],
 )
 async def keypair(ctx: interactions.CommandContext, public_key: str):
@@ -165,4 +168,49 @@ async def keypair(ctx: interactions.CommandContext, public_key: str):
     os_client.close()
 
 
-bot.start()
+@add.subcommand(
+    name="portforward",
+    description="Add port forwarding rules in Midgard",
+    options=[
+        interactions.Option(
+            name="port",
+            description="The port you want to forward",
+            type=interactions.OptionType.INTEGER,
+            required=True,
+        ),
+    ],
+)
+async def portforward(ctx: interactions.CommandContext, port: int):
+    """Add port forwarding rules to security group in Midgard"""
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    if user is None:
+        await ctx.send(
+            f"<@{ctx.author.user.id}> You need to register first. Use `/midgard register` to do so."
+        )
+    else:
+        os_client = cloud.connect()
+
+        project = await cloud.find_project(os_client, user.project_name)
+        try:
+            await cloud.add_security_group_rule(os_client, project, port)
+            await ctx.send(
+                f"<@{ctx.author.user.id}> Port forwarding rule has been added!"
+            )
+        except Exception as e:
+            await ctx.send(f"<@{ctx.author.user.id}> {e}")
+
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
+
+
+def main():
+    """Main function"""
+    bot.start()
+
+
+if __name__ == "__main__":
+    """Run main function"""
+    main()

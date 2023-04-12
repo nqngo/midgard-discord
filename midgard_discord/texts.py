@@ -1,4 +1,4 @@
-# Texts in the application
+# Large texts in the application
 
 WELCOME = """
 Welcome to Midgard. Midgard is a private OpenStack cloud for VAIT testing, training, and development purpose.

@@ -14,7 +14,11 @@ DEFAULT_SUBNET_NAME = "midgard-subnet"
 DEFAULT_DNS_NAMESERVERS = ["1.1.1.1", "1.0.0.1"]
 DEFAULT_IP_VERSION = 4
 DEFAULT_KEYPAIR_NAME = "midgard-keypair"
-DEFAUT_KEYPAIR_TYPE = "ssh"
+DEFAULT_KEYPAIR_TYPE = "ssh"
+DEFAULT_SG_DIRECTION = "ingress"
+DEFAULT_SG_PROTOCOL = "tcp"
+DEFAULT_SG_NAME = "default"
+DEFAULT_SG_REMOTE_IP_PREFIX = "0.0.0.0/0"
 
 
 def connect(
@@ -39,6 +43,13 @@ def connect(
             user_domain_name=user_domain,
             project_domain_name=project_domain,
         )
+
+
+async def find_project(client: openstack.connection.Connection, project_name: str):
+    """Find a project in Keystone database."""
+    return await asyncio.to_thread(
+        client.identity.find_project, project_name, ignore_missing=True
+    )
 
 
 async def find_user(client: openstack.connection.Connection, discord_user_id: str):
@@ -123,6 +134,35 @@ async def setup_default_network(
     )
 
 
+async def add_security_group_rule(
+    client: openstack.connection.Connection,
+    project: openstack.identity.v3.project.Project,
+    port: int,
+    direction: str = DEFAULT_SG_DIRECTION,
+) -> None:
+    """Setup default security group for a project."""
+    # Find security group
+    security_group = await asyncio.to_thread(
+        client.network.find_security_group,
+        DEFAULT_SG_NAME,
+        project_id=project.id,
+    )
+
+    # Create security group rule
+    try:
+        await asyncio.to_thread(
+            client.network.create_security_group_rule,
+            security_group_id=security_group.id,
+            direction=direction,
+            protocol=DEFAULT_SG_PROTOCOL,
+            port_range_min=port,
+            port_range_max=port,
+            remote_ip_prefix=DEFAULT_SG_REMOTE_IP_PREFIX,
+        )
+    except openstack.exceptions.ConflictException as e:
+        raise Exception(e.details.split(".")[0] + ".")
+
+
 async def find_keypair(client: openstack.connection.Connection):
     """Find a keypair in a project."""
     return await asyncio.to_thread(
@@ -142,7 +182,7 @@ async def create_keypair(
             client.compute.create_keypair,
             name=DEFAULT_KEYPAIR_NAME,
             public_key=public_key,
-            type=DEFAUT_KEYPAIR_TYPE,
+            type=DEFAULT_KEYPAIR_TYPE,
         )
     except openstack.exceptions.BadRequestException as e:
         raise Exception(e.details)
