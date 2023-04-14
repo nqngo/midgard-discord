@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "midgard-discord"
-version = "0.7.2"
+version = "0.8.0"
 description = "ChatOps discord bot to request and provision Openstack resources in MidgardLab"
 authors = ["Nhat Ngo <discordbot.awg4s@mail.ngo.cx>"]
 readme = "README.md"
@@ -19,6 +19,8 @@ aiohttp = "^3.8.4"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.2.2"
 black = "^23.3.0"
+pytest = "^7.3.0"
+pytest-asyncio = "^0.21.0"
 
 [build-system]
 requires = ["poetry-core"]
