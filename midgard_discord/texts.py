@@ -3,7 +3,6 @@
 
 # Fragments
 INFO_MORE = """
-
 For more information, visit https://docs.midgardlab.io
 """
 
@@ -15,6 +14,15 @@ Welcome to Midgard. Midgard is a private OpenStack cloud for VAIT testing, train
 At the moment, Midgard offers the following capacities:
     1. Virtual Machines.
     2. Automatic SSL certificate termination.
+"""
+    + INFO_MORE
+)
+
+REGISTERED = (
+    """
+<@{discord_user_id}> You have been successfully registered.
+Add an SSH public key to your account by running `/midgard keypair add`. This is required to access your server.
+You can now create a server by running `/midgard server launch`.
 """
     + INFO_MORE
 )
@@ -43,16 +51,32 @@ Then you can access your server by running `ssh {server_name}`.
 
 
 # Error texts
+ERROR_REGISTERED = (
+    """
+<@{discord_user_id}> You are already registered.
+Add an SSH public key to your account by running `/midgard keypair add` or
+run `/midgard server launch` to create a server.
+"""
+    + INFO_MORE
+)
+
 ERROR_NOT_REGISTERED = (
     """
-<@{discord_user_id}> You are not yet registered. Please register by running `\migard register`.
+<@{discord_user_id}> You are not yet registered. Please register by running `/migard register`.
 """
     + INFO_MORE
 )
 
 ERROR_SERVER_NOT_FOUND = (
     """
-<@{discord_user_id}> You do not have any server. Please create a server by running `\midgard server launch`.
+<@{discord_user_id}> You do not have any server. Please create a server by running `/midgard server launch`.
+"""
+    + INFO_MORE
+)
+
+ERROR_KEYPAIR_NOT_FOUND = (
+    """
+<@{discord_user_id}> You do not have any SSH keypair. Please add an SSH keypair by running `/midgard add keypair`.
 """
     + INFO_MORE
 )

@@ -69,9 +69,6 @@ async def register(ctx: interactions.CommandContext):
             # Setup default network
             await cloud.setup_default_network(os_client, os_project)
 
-            # Add SSH security group
-            await cloud.add_ssh_security_group(os_client, os_project, 22)
-
             # Cache user in database
             await database.create_user(
                 db_session,
@@ -79,9 +76,7 @@ async def register(ctx: interactions.CommandContext):
                 password=user_password,
                 project_name=project_name,
             )
-            await ctx.send(
-                f"Hi <@{ctx.author.user.id}>, your account has been registered!"
-            )
+            await ctx.send(texts.REGISTERED.format(discord_user_id=ctx.author.user.id))
         # If we find the user in OpenStack, reset the password and cache it in database
         else:
             user_password = utils.generate_password()
@@ -93,12 +88,10 @@ async def register(ctx: interactions.CommandContext):
                 password=user_password,
                 project_name=project.name,
             )
-            await ctx.send(
-                f"Hi <@{ctx.author.user.id}>, your account has already been registered!"
-            )
+            await ctx.send(texts.REGISTERED.format(discord_user_id=ctx.author.user.id))
     else:
         await ctx.send(
-            f"Hi <@{ctx.author.user.id}>, your account has already been registered!"
+            texts.ERROR_REGISTERED.format(discord_user_id=ctx.author.user.id)
         )
     # Close database connection
     await db_engine.dispose()
@@ -382,6 +375,13 @@ async def server_launch(ctx: interactions.CommandContext, flavor: str, image: st
             keypair = await cloud.find_keypair(os_client)
             security_group = await cloud.find_default_security_group(os_client)
             try:
+                # Check if keypair exists
+                if keypair is None:
+                    raise Exception(
+                        texts.ERROR_KEYPAIR_NOT_FOUND.format(
+                            discord_user_id=ctx.author.user.id
+                        )
+                    )
                 # Create a Nova server
                 server = await cloud.create_server(
                     os_client,
