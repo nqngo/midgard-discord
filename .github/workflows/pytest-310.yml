@@ -1,6 +1,6 @@
 name: "Run pytest on Python 3.10"
 
-on: pull_request
+on: [push, pull_request]
 
 jobs:
   test:
