@@ -148,7 +148,6 @@ async def find_default_network(
 
 async def add_security_group_rule(
     client: openstack.connection.Connection,
-    project: openstack.identity.v3.project.Project,
     port: int,
     direction: str = DEFAULT_SG_DIRECTION,
 ) -> None:
@@ -157,7 +156,6 @@ async def add_security_group_rule(
     security_group = await asyncio.to_thread(
         client.network.find_security_group,
         DEFAULT_SG_NAME,
-        project_id=project.id,
     )
 
     # Create security group rule

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "midgard-discord"
-version = "0.6.2"
+version = "0.7.0"
 description = "ChatOps discord bot to request and provision Openstack resources in MidgardLab"
 authors = ["Nhat Ngo <discordbot.awg4s@mail.ngo.cx>"]
 readme = "README.md"
@@ -13,6 +13,7 @@ python-dotenv = "^1.0.0"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.9"}
 aiosqlite = "^0.18.0"
 openstacksdk = "^1.0.1"
+aiohttp = "^3.8.4"
 
 
 [tool.poetry.group.dev.dependencies]

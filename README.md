@@ -16,7 +16,7 @@
 
 The software architecture for the bot is as followed:
 
-![Midgard-Discord Bot Architecture Diagram](https://www.plantuml.com/plantuml/svg/JP2zQiH038HxFOLmdqjl3dF97O4K-Mdo06kjR8ozgsD_I17oxbdPw-1AevdXG-WIamafkmL8t5qy-uJDssH74-opf0PDn5uIq2BPucsA9C6gQJS9DVcuioyecfy-NpMMVQzvSzKnB2OmldFwbZ2lR1h0K9A0Nv636hbCy68PcvlGp66jsLNY3o0Uxho-OChUywATAk4Nh4ccDr49LMsC7a3fU7xezlDRd7pYO2Z5FIiX3IsI59hQjOddqwdJLxJuwFG_Qf4uPxpjeFYbKB3zBkivBPQ26LbvmpJ2vcum6exhuMKRucZzOm97oO4u0bpOs-oMFm00)
+![Midgard-Discord Bot Architecture Diagram](https://www.plantuml.com/plantuml/svg/JL3BJiGm3BpxAwpUMUxLgbgn2pVWWFY0D76hgcsySX8u8FvzxJwadZAUcOwdlgJi99Tv0i_pdIF5ZDNx47eduOLpXIvXondyn2NWRKYU9HWPLWYRydcdg55-D8ttOHEhgptTv8JmW_8loxW4-mwSpopudKYCAFf2v41OlOQUlaX-I1PhO3-gvmyG3qMlRvXBZ3IPPuFm3y5brxgaARSDhHaj0DWAF3yr-m_KECHCeZtIhgdekrhtQ9pHcnFFfrDZnwZnUROB6QLbPXT30ygheR4b1XMjTPQSRkYB4ApCckExutWusVBraQbHDxYUK2Xn4Ky9BXH3cQS7)
 
 1. Users will interface with the MidgardLab entirely through Discord slash commands.
 2. The Discord bot will communicate with the OpenStack API on the users' behalf to setup an account, register public key and provision VM.
