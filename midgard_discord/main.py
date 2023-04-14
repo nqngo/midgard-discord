@@ -43,7 +43,7 @@ async def help(ctx: interactions.CommandContext):
 @interactions.autodefer()
 async def register(ctx: interactions.CommandContext):
     """Request enrolment to Midgard"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     os_client = cloud.connect()
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
@@ -81,7 +81,7 @@ async def register(ctx: interactions.CommandContext):
         else:
             user_password = utils.generate_password()
             await cloud.update_user(os_client, os_user, password=user_password)
-            project = await cloud.find_project(os_client, user.default_project)
+            project = await cloud.find_project(os_client, user.project_name)
             await database.create_user(
                 db_session,
                 str(ctx.author.user.id),
@@ -118,7 +118,7 @@ async def add(ctx: interactions.CommandContext):
 )
 async def keypair(ctx: interactions.CommandContext, public_key: str):
     """Set your SSH-public key in Midgard"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     if user is None:
@@ -188,7 +188,7 @@ async def portforward(
     ctx: interactions.CommandContext, port: int, protocol: str = "http"
 ):
     """Add port forwarding rules to security group in Midgard"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     if user is None:
@@ -271,7 +271,7 @@ async def add_dns(
 ):
     """Add a DNS tunnel to your server"""
 
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     if user is None:
@@ -343,7 +343,7 @@ async def server(ctx: interactions.CommandContext):
 @interactions.autodefer()
 async def server_launch(ctx: interactions.CommandContext, flavor: str, image: str):
     """Create a VM server"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     if user is None:
@@ -428,7 +428,7 @@ async def server_launch_flavor_autocomplete(
     ctx: interactions.CommandContext, user_input: str = ""
 ):
     """Autocomplete for create server flavor"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     if user is None:
@@ -468,7 +468,7 @@ async def server_launch_image_autocomplete(
     ctx: interactions.CommandContext, user_input: str = ""
 ):
     """Autocomplete for create server image"""
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_ASYNC_URI"))
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
     os_client = cloud.connect(

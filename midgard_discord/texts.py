@@ -54,8 +54,8 @@ Then you can access your server by running `ssh {server_name}`.
 ERROR_REGISTERED = (
     """
 <@{discord_user_id}> You are already registered.
-Add an SSH public key to your account by running `/midgard keypair add` or
-run `/midgard server launch` to create a server.
+Add an SSH public key to your account by running `/midgard keypair add`
+Or run `/midgard server launch` to create a server.
 """
     + INFO_MORE
 )

@@ -29,3 +29,9 @@ Run the bot with the following command:
 ```bash
 poetry run midgard
 ```
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+
+## License
+This project is licensed under the terms of the [MIT license](LICENSE).
