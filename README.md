@@ -1,6 +1,6 @@
 # Midgard Discord bot
 
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/nqngo/midgard-discord/main.svg)](https://results.pre-commit.ci/latest/github/nqngo/midgard-discord/main) [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/nqngo/midgard-discord/main.svg)](https://results.pre-commit.ci/latest/github/nqngo/midgard-discord/main)![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)[![PyPI version](https://badge.fury.io/py/midgard-discord.svg)](https://pypi.org/project/midgard-discord/0.8.0/)
 
 **Midgard** is a private OpenStack cloud for VAIT testing, training, and development purpose. This project aims to simplify and allow quick provisioning of OpenStack VM using an opinionated workflow entirely through Discord, following a ChatOps model.
 
