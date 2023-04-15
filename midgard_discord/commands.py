@@ -22,7 +22,7 @@ def log(who: str, event: str) -> None:
 async def help(ctx: interactions.CommandContext):
     """Send a welcome message."""
     log(ctx.author.name, "/midgard help")
-    await ctx.send(texts.WELCOME)
+    await ctx.send(texts.WELCOME, suppress_embeds=True)
 
 
 async def register(
@@ -74,8 +74,48 @@ async def register(
                 password=user_password,
                 project_name=project.name,
             )
-        await ctx.send(texts.REGISTERED.format(discord_user_id=ctx.author.user.id))
+        await ctx.send(
+            texts.REGISTERED.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
+        )
     else:
         await ctx.send(
-            texts.ERROR_REGISTERED.format(discord_user_id=ctx.author.user.id)
+            texts.ERROR_REGISTERED.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
         )
+
+
+async def add_keypair(
+    ctx: interactions.CommandContext,
+    user: database.OpenStackCredential,
+    os_client: openstack.connection.Connection,
+    public_key: str,
+):
+    """Add a keypair to a user."""
+    if user is None:
+        await ctx.send(
+            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id)
+        )
+    else:
+        keypair = await cloud.find_keypair(os_client)
+        # Create a new keypair if it doesn't exist
+        if keypair is None:
+            try:
+                await cloud.create_keypair(os_client, public_key)
+                await ctx.send(
+                    texts.KEYPAIR_UPDATED.format(discord_user_id=ctx.author.user.id),
+                    suppress_embeds=True,
+                )
+            except Exception as e:
+                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+        # Update the keypair if it exists
+        else:
+            await cloud.delete_keypair(os_client, keypair)
+            try:
+                await cloud.create_keypair(os_client, public_key)
+                await ctx.send(
+                    texts.KEYPAIR_UPDATED.format(discord_user_id=ctx.author.user.id),
+                    suppress_embeds=True,
+                )
+            except Exception as e:
+                await ctx.send(f"<@{ctx.author.user.id}> {e}")

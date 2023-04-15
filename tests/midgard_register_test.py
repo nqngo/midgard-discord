@@ -38,7 +38,8 @@ async def test_register_new_user(ctx, *args):
     # The register command should send a registered message.
     await commands.register(ctx, async_session, openstackclient)
     ctx.send.assert_called_once_with(
-        texts.REGISTERED.format(discord_user_id=ctx.author.user.id)
+        texts.REGISTERED.format(discord_user_id=ctx.author.user.id),
+        suppress_embeds=True,
     )
 
 
@@ -64,7 +65,8 @@ async def test_register_existing_user_no_cache(ctx, *args):
     # TODO The register command should create a new user in the database.
     # The register command should send a registered message
     ctx.send.assert_called_once_with(
-        texts.REGISTERED.format(discord_user_id=ctx.author.user.id)
+        texts.REGISTERED.format(discord_user_id=ctx.author.user.id),
+        suppress_embeds=True,
     )
 
 
@@ -81,5 +83,6 @@ async def test_register_existing_user(ctx):
     await commands.register(ctx, async_session, openstackclient)
     # The register command should send an already registered message.
     ctx.send.assert_called_once_with(
-        texts.ERROR_REGISTERED.format(discord_user_id=ctx.author.user.id)
+        texts.ERROR_REGISTERED.format(discord_user_id=ctx.author.user.id),
+        suppress_embeds=True,
     )

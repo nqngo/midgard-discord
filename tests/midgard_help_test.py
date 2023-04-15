@@ -21,4 +21,4 @@ async def test_help(ctx):
     The help command should send a welcome message.
     """
     await commands.help(ctx)
-    ctx.send.assert_called_once_with(texts.WELCOME)
+    ctx.send.assert_called_once_with(texts.WELCOME, suppress_embeds=True)

@@ -75,14 +75,12 @@ async def add(ctx: interactions.CommandContext):
 async def keypair(ctx: interactions.CommandContext, public_key: str):
     """Set your SSH-public key in Midgard"""
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
-    user = await database.find_user(db_session, str(ctx.author.user.id))
 
-    if user is None:
-        await ctx.send(
-            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id)
-        )
-    else:
-        os_client = cloud.connect(
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+    os_client = (
+        cloud.connect()
+        if user is None
+        else cloud.connect(
             auth_url=os.getenv("OS_AUTH_URL"),
             region_name=os.getenv("OS_REGION_NAME"),
             project_name=user.project_name,
@@ -91,27 +89,10 @@ async def keypair(ctx: interactions.CommandContext, public_key: str):
             user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
             project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
         )
+    )
 
-        keypair = await cloud.find_keypair(os_client)
-        # Create a new keypair if it doesn't exist
-        if keypair is None:
-            try:
-                await cloud.create_keypair(os_client, public_key)
-                await ctx.send(
-                    f"<@{ctx.author.user.id}> Your public key has been updated!"
-                )
-            except Exception as e:
-                await ctx.send(f"<@{ctx.author.user.id}> {e}")
-        # Update the keypair if it exists
-        else:
-            await cloud.delete_keypair(os_client, keypair)
-            try:
-                await cloud.create_keypair(os_client, public_key)
-                await ctx.send(
-                    f"<@{ctx.author.user.id}> Your public key has been updated!"
-                )
-            except Exception as e:
-                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+    await commands.add_keypair(ctx, db_session, os_client, public_key)
+
     # Close database connection
     await db_engine.dispose()
     os_client.close()

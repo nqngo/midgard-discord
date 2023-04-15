@@ -49,6 +49,14 @@ Then you can access your server by running `ssh {server_name}`.
     + INFO_MORE
 )
 
+KEYPAIR_UPDATED = (
+    """
+<@{discord_user_id}> Your SSH keypair has been successfully updated.
+This change will only affect servers created or relaunched after this update.
+Please note that existing keypair on the server will not be replaced.
+"""
+    + INFO_MORE
+)
 
 # Error texts
 ERROR_REGISTERED = (
