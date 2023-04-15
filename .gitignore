@@ -1,6 +1,8 @@
 .env
+.env.*
 .vscode
 *.db
 __pycache__
 dist
 .pytest_cache
+!.env.example
