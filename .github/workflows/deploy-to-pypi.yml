@@ -9,7 +9,9 @@ on:
 
 jobs:
   tests:
-    uses: ./.github/workflows/pytest-310.yml
+    uses: ./.github/workflows/run-pytest.yml
+    with:
+      python-version: "3.10"
   deploy:
     runs-on: ubuntu-latest
     needs: [tests]

@@ -1,20 +1,23 @@
 name: "Run pytest"
 
-on: [workflow_call]
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python versions to test against"
+        required: true
+        type: string
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up python ${{ matrix.python-version }}}
+      - name: Set up python ${{ input.python-version }}}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ input.python-version }}
       - name: Load cached Poetry installation
         id: cached-poetry
         uses: actions/cache@v3
