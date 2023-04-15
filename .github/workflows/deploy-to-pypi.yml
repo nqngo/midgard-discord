@@ -1,17 +1,25 @@
-name: "Run pytest on Python 3.10"
+name: "Deploy the package to PyPI"
 
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
 
 jobs:
-  test:
+  tests:
+    uses: ./.github/workflows/pytest-310.yml
+  deploy:
     runs-on: ubuntu-latest
+    needs: [tests]
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up python
+      - name: Set up python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - name: Load cached Poetry installation
         id: cached-poetry
         uses: actions/cache@v3
@@ -35,5 +43,7 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install library
         run: poetry install --no-interaction
-      - name: Test with pytest
-        run: poetry run pytest
+      - name: Set up PyPI credentials
+        run: poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+      - name: Publish package
+        run: poetry publish --build
