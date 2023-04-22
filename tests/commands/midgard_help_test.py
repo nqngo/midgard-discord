@@ -1,16 +1,7 @@
 import pytest
 
-import interactions
-
-from unittest.mock import AsyncMock
 from midgard_discord import commands
 from midgard_discord import texts
-
-
-@pytest.fixture
-def ctx():
-    """Return a mock context."""
-    return AsyncMock(interactions.CommandContext)
 
 
 @pytest.mark.asyncio
