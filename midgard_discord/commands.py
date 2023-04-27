@@ -207,3 +207,4 @@ async def add_portforward(
 
 async def server_create():
     """Create a server."""
+    pass
