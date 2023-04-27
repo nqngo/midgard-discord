@@ -42,7 +42,7 @@ jobs:
       - name: Install library
         run: poetry install --no-interaction
       - name: Test with pytest
-        run: poetry run coverage run -m pytest
+        run: poetry run coverage run --data-file=.coverage.${{ inputs.python-version }}} -m pytest
       - name: Store coverage data
         uses: actions/upload-artifact@v3
         with:
