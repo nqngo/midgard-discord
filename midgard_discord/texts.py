@@ -21,8 +21,17 @@ At the moment, Midgard offers the following capacities:
 REGISTERED = (
     """
 <@{discord_user_id}> You have been successfully registered.
-Add an SSH public key to your account by running `/midgard keypair add`. This is required to access your server.
-You can now create a server by running `/midgard server launch`.
+Add an SSH public key to your account by running `/midgard add keypair`. This is required to access your server.
+You can now create a server by running `/midgard server create`.
+"""
+    + INFO_MORE
+)
+
+CNAME_ADDED = (
+    """
+<@{discord_user_id}> `{protocol}://{server_ip}:{port}` is now accessible at:
+
+https://{hostname}.midgardlab.io
 """
     + INFO_MORE
 )
@@ -54,6 +63,17 @@ KEYPAIR_UPDATED = (
 <@{discord_user_id}> Your SSH keypair has been successfully updated.
 This change will only affect servers created or relaunched after this update.
 Please note that existing keypair on the server will not be replaced.
+"""
+    + INFO_MORE
+)
+
+
+PORT_FORWARDED = (
+    """
+<@{discord_user_id}> `{protocol}://{server_ip}:{port}` successfully forwarded.
+Access it at:
+
+https://{discord_user_id}-{protocol}-{port}.midgardlab.io
 """
     + INFO_MORE
 )

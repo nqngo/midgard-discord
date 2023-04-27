@@ -82,6 +82,7 @@ async def test_register_new_user(
     create_project_cloud_patch,
     create_user_cloud_patch,
     setup_default_network_patch,
+    create_security_group_cloud_patch,
 ):
     """
     Test the register command with new user.
@@ -91,6 +92,7 @@ async def test_register_new_user(
     The register command should create a new project in Keystone.
     The register command should create a new user in Keystone.
     The register command should create setup the default network in Neutron.
+    The register command should create a security group in Neutron.
     The register command should create a new user in the database.
     The register command should send a registered message.
     """
@@ -110,6 +112,9 @@ async def test_register_new_user(
 
     # The register command should create setup the default network in Neutron.
     setup_default_network_patch.assert_called_once()
+
+    # The register command should create a security group in Neutron.
+    create_security_group_cloud_patch.assert_called_once()
 
     # The register command should create a new user in the database.
     create_user_db_patch.assert_called_once()

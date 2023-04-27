@@ -17,7 +17,7 @@ DEFAULT_KEYPAIR_NAME = "midgard-keypair"
 DEFAULT_KEYPAIR_TYPE = "ssh"
 DEFAULT_SG_DIRECTION = "ingress"
 DEFAULT_SG_PROTOCOL = "tcp"
-DEFAULT_SG_NAME = "default"
+DEFAULT_SG_NAME = "midgard"
 DEFAULT_SG_REMOTE_IP_PREFIX = "0.0.0.0/0"
 DEFAULT_SERVER_NAME = "midgard-server"
 
@@ -146,6 +146,18 @@ async def find_default_network(
     )
 
 
+async def create_security_group(
+    client: openstack.connection.Connection,
+    project: openstack.identity.v3.project.Project,
+) -> openstack.network.v2.security_group.SecurityGroup:
+    """Create a new security group for a project."""
+    return await asyncio.to_thread(
+        client.network.create_security_group,
+        name=DEFAULT_SG_NAME,
+        project_id=project.id,
+    )
+
+
 async def add_security_group_rule(
     client: openstack.connection.Connection,
     port: int,
@@ -191,7 +203,9 @@ async def find_floating_ip(
     return await asyncio.to_thread(client.available_floating_ip, **kwargs)
 
 
-async def find_keypair(client: openstack.connection.Connection):
+async def find_keypair(
+    client: openstack.connection.Connection,
+) -> openstack.compute.v2.keypair.Keypair:
     """Find a keypair in a project."""
     return await asyncio.to_thread(
         client.compute.find_keypair,

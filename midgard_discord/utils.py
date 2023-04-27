@@ -1,5 +1,6 @@
 # Collections of utility functions
 
+import datetime
 import string
 import secrets
 
@@ -18,3 +19,9 @@ def generate_password(length: int = 32):
     """Generate a random password."""
     chars = string.ascii_letters + string.digits + "-_!@#$%^&*()"
     return "".join(secrets.choice(chars) for i in range(length))
+
+
+def log(who: str, event: str) -> None:
+    now = datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] <{who}> {event}")

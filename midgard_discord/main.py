@@ -9,6 +9,7 @@ from midgard_discord import commands
 from midgard_discord import database
 from midgard_discord import networking
 from midgard_discord import texts
+from midgard_discord import utils
 
 
 # Setup discord API
@@ -37,6 +38,7 @@ async def midgard(ctx: interactions.CommandContext):
 @midgard.subcommand(name="help", description="Get help with Midgard")
 async def help(ctx: interactions.CommandContext):
     """Get help with Midgard"""
+    utils.log(ctx.author.name, "/midgard help")
     await commands.help(ctx)
 
 
@@ -44,6 +46,7 @@ async def help(ctx: interactions.CommandContext):
 @interactions.autodefer(delay=2.5)
 async def register(ctx: interactions.CommandContext):
     """Request enrolment to Midgard"""
+    utils.log(ctx.author.name, "/midgard register")
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     os_client = cloud.connect()
 
@@ -72,8 +75,9 @@ async def add(ctx: interactions.CommandContext):
         ),
     ],
 )
-async def keypair(ctx: interactions.CommandContext, public_key: str):
+async def add_keypair(ctx: interactions.CommandContext, public_key: str):
     """Set your SSH-public key in Midgard"""
+    utils.log(ctx.author.name, f"/midgard add keypair public_key:{public_key}")
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
 
     user = await database.find_user(db_session, str(ctx.author.user.id))
@@ -91,7 +95,7 @@ async def keypair(ctx: interactions.CommandContext, public_key: str):
         )
     )
 
-    await commands.add_keypair(ctx, db_session, os_client, public_key)
+    await commands.add_keypair(ctx, user, os_client, public_key)
 
     # Close database connection
     await db_engine.dispose()
@@ -121,19 +125,20 @@ async def keypair(ctx: interactions.CommandContext, public_key: str):
         ),
     ],
 )
-async def portforward(
+async def add_portforward(
     ctx: interactions.CommandContext, port: int, protocol: str = "http"
 ):
     """Add port forwarding rules to security group in Midgard"""
+    utils.log(
+        ctx.author.name, f"/midgard add portforward port:{port} protocol:{protocol}"
+    )
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
-    if user is None:
-        await ctx.send(
-            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id)
-        )
-    else:
-        os_client = cloud.connect(
+    os_client = (
+        cloud.connect()
+        if user is None
+        else cloud.connect(
             auth_url=os.getenv("OS_AUTH_URL"),
             region_name=os.getenv("OS_REGION_NAME"),
             project_name=user.project_name,
@@ -142,32 +147,9 @@ async def portforward(
             user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
             project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
         )
+    )
 
-        server = await cloud.find_server(os_client)
-        if server is None:
-            await ctx.send(
-                texts.ERROR_SERVER_NOT_FOUND.format(discord_user_id=ctx.author.user.id)
-            )
-        else:
-            try:
-                tunnels = await networking.get_tunnel_config()
-                await cloud.add_security_group_rule(os_client, port)
-                public_ip = [
-                    ip["addr"]
-                    for ip in server.addresses["default"]
-                    if ip["OS-EXT-IPS:type"] == "floating"
-                ][0]
-                service = f"{protocol}://{public_ip}:{port}"
-                hostname = f"{user.username}-{protocol}-{port}"
-                networking.add_tunnel_config(tunnels, service, hostname)
-                await networking.update_tunnel_config(tunnels)
-                await networking.create_dns_record(hostname)
-                await ctx.send(
-                    f"<@{ctx.author.user.id}> Port forwarding rule has been added!",
-                    ephemeral=True,
-                )
-            except Exception as e:
-                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+    await commands.add_portforward(ctx, user, os_client, port, protocol)
 
     # Close database connection
     await db_engine.dispose()
@@ -203,52 +185,6 @@ async def portforward(
 #         ),
 #     ],
 # )
-async def add_dns(
-    ctx: interactions.CommandContext, hostname: str, port: int, protocol: str = "http"
-):
-    """Add a DNS tunnel to your server"""
-
-    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
-    user = await database.find_user(db_session, str(ctx.author.user.id))
-
-    if user is None:
-        await ctx.send(
-            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id)
-        )
-    else:
-        tunnels = await networking.get_tunnel_config()
-
-        try:
-            os_client = cloud.connect(
-                auth_url=os.getenv("OS_AUTH_URL"),
-                region_name=os.getenv("OS_REGION_NAME"),
-                project_name=user.project_name,
-                username=user.username,
-                password=user.password,
-                user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
-                project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
-            )
-
-            server = await cloud.find_server(os_client)
-            public_ip = [
-                ip["addr"]
-                for ip in server.addresses["default"]
-                if ip["OS-EXT-IPS:type"] == "floating"
-            ][0]
-            service = f"{protocol}://{public_ip}:{port}"
-            networking.add_tunnel_config(tunnels, service, hostname)
-            await networking.update_tunnel_config(tunnels)
-            await networking.create_dns_record(hostname)
-            await ctx.send(
-                f"<@{ctx.author.user.id}> DNS tunnel has been added to your server!",
-                ephemeral=True,
-            )
-        except Exception as e:
-            await ctx.send(f"<@{ctx.author.user.id}> {e}")
-
-    # Close database connection
-    await db_engine.dispose()
-    os_client.close()
 
 
 @midgard.group(name="server")
@@ -258,7 +194,7 @@ async def server(ctx: interactions.CommandContext):
 
 
 @server.subcommand(
-    name="launch",
+    name="create",
     description="Create a VM server",
     options=[
         interactions.Option(
@@ -278,7 +214,7 @@ async def server(ctx: interactions.CommandContext):
     ],
 )
 @interactions.autodefer()
-async def server_launch(ctx: interactions.CommandContext, flavor: str, image: str):
+async def server_create(ctx: interactions.CommandContext, flavor: str, image: str):
     """Create a VM server"""
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
@@ -360,8 +296,8 @@ async def server_launch(ctx: interactions.CommandContext, flavor: str, image: st
     os_client.close()
 
 
-@server_launch.autocomplete("flavor")
-async def server_launch_flavor_autocomplete(
+@server_create.autocomplete("flavor")
+async def server_create_flavor_autocomplete(
     ctx: interactions.CommandContext, user_input: str = ""
 ):
     """Autocomplete for create server flavor"""
@@ -400,8 +336,8 @@ async def server_launch_flavor_autocomplete(
     await ctx.populate(choices)
 
 
-@server_launch.autocomplete("image")
-async def server_launch_image_autocomplete(
+@server_create.autocomplete("image")
+async def server_create_image_autocomplete(
     ctx: interactions.CommandContext, user_input: str = ""
 ):
     """Autocomplete for create server image"""

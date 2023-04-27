@@ -31,6 +31,36 @@ def openstackclient():
 
 
 @pytest.fixture
+def private_key():
+    """SSH private key."""
+    return """-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACBpoqQHh3TfVjNOUswevNeR+WNDJXf/e7m62VPFwredQgAAAJBlWyIRZVsi
+EQAAAAtzc2gtZWQyNTUxOQAAACBpoqQHh3TfVjNOUswevNeR+WNDJXf/e7m62VPFwredQg
+AAAEBsevcz5OvqAxBHdJ1UhN3O5aizozcqMdrmLUnEG4DqiGmipAeHdN9WM05SzB6815H5
+Y0Mld/97ubrZU8XCt51CAAAADW5xbmdvQGhlbGhlaW0=
+-----END OPENSSH PRIVATE KEY-----"""
+
+
+@pytest.fixture
+def public_key():
+    """SSH public key."""
+    return "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGmipAeHdN9WM05SzB6815H5Y0Mld/97ubrZU8XCt51C midgard@pytest"
+
+
+@pytest.fixture
+def http_port():
+    """Port number."""
+    return 8080
+
+
+@pytest.fixture
+def http_protocol():
+    """Protocol."""
+    return "http"
+
+
+@pytest.fixture
 def find_user_db_patch_none():
     with patch("midgard_discord.database.find_user", return_value=None) as mock:
         yield mock
@@ -144,4 +174,127 @@ def find_default_network_cloud_patch_some_network():
 @pytest.fixture
 def setup_default_network_patch():
     with patch("midgard_discord.cloud.setup_default_network") as mock:
+        yield mock
+
+
+@pytest.fixture
+def find_keypair_cloud_patch_none():
+    with patch("midgard_discord.cloud.find_keypair", return_value=None) as mock:
+        yield mock
+
+
+@pytest.fixture
+def find_keypair_cloud_patch_some_keypair():
+    keypair = MagicMock(openstack.compute.v2.keypair.Keypair)
+    keypair.id = "333"
+    keypair.name = "test_keypair"
+
+    with patch("midgard_discord.cloud.find_keypair", return_value=keypair) as mock:
+        yield mock
+
+
+@pytest.fixture
+def create_keypair_cloud_patch():
+    keypair = MagicMock(openstack.compute.v2.keypair.Keypair)
+    keypair.id = "333"
+    keypair.name = "test_keypair"
+
+    with patch("midgard_discord.cloud.create_keypair", return_value=keypair) as mock:
+        yield mock
+
+
+@pytest.fixture
+def delete_keypair_cloud_patch():
+    with patch("midgard_discord.cloud.delete_keypair") as mock:
+        yield mock
+
+
+@pytest.fixture
+def find_server_cloud_patch_none():
+    with patch("midgard_discord.cloud.find_server", return_value=None) as mock:
+        yield mock
+
+
+@pytest.fixture
+def find_server_cloud_patch_some_server():
+    server = MagicMock(openstack.compute.v2.server.Server)
+    server.id = "444"
+    server.name = "test_server"
+    server.addresses = {
+        "default": [
+            {
+                "addr": "192.168.0.8",
+                "OS-EXT-IPS:type": "floating",
+            },
+            {
+                "addr": "10.0.0.8",
+                "OS-EXT-IPS:type": "fixed",
+            },
+        ]
+    }
+    with patch("midgard_discord.cloud.find_server", return_value=server) as mock:
+        yield mock
+
+
+@pytest.fixture
+def create_server_cloud_patch():
+    server = MagicMock(openstack.compute.v2.server.Server)
+    server.id = "444"
+    server.name = "test_server"
+
+    with patch("midgard_discord.cloud.create_server", return_value=server) as mock:
+        yield mock
+
+
+@pytest.fixture
+def create_security_group_cloud_patch():
+    security_group = MagicMock(openstack.network.v2.security_group.SecurityGroup)
+    security_group.id = "555"
+    security_group.name = "test_security_group"
+
+    with patch(
+        "midgard_discord.cloud.create_security_group", return_value=security_group
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def add_security_group_rule_cloud_patch():
+    with patch("midgard_discord.cloud.add_security_group_rule") as mock:
+        yield mock
+
+
+@pytest.fixture
+def find_default_security_group_cloud_patch():
+    security_group = MagicMock(openstack.network.v2.security_group.SecurityGroup)
+    security_group.id = "555"
+    security_group.name = "test_security_group"
+
+    with patch(
+        "midgard_discord.cloud.find_default_security_group", return_value=security_group
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def get_tunnel_config_networking_patch():
+    with patch("midgard_discord.networking.get_tunnel_config") as mock:
+        yield mock
+
+
+@pytest.fixture
+def add_tunnel_config_networking_patch():
+    with patch("midgard_discord.networking.add_tunnel_config") as mock:
+        yield mock
+
+
+@pytest.fixture
+def update_tunnel_config_networking_patch():
+    with patch("midgard_discord.networking.update_tunnel_config") as mock:
+        yield mock
+
+
+@pytest.fixture
+def create_dns_record_networking_patch():
+    with patch("midgard_discord.networking.create_dns_record") as mock:
         yield mock
