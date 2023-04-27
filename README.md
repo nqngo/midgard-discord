@@ -1,6 +1,9 @@
 # Midgard Discord bot
 
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/nqngo/midgard-discord/main.svg)](https://results.pre-commit.ci/latest/github/nqngo/midgard-discord/main)![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)[![PyPI version](https://badge.fury.io/py/midgard-discord.svg)](https://pypi.org/project/midgard-discord/0.8.0/)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/nqngo/midgard-discord/main.svg)](https://results.pre-commit.ci/latest/github/nqngo/midgard-discord/main)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/midgard-discord?logo=python&logoColor=green)
+![PyPI](https://img.shields.io/pypi/v/midgard-discord?color=cadetblue&logo=pypi&logoColor=gainsboro)
+[![codecov](https://codecov.io/gh/nqngo/midgard-discord/branch/main/graph/badge.svg?token=QR6QFOVGFG)](https://codecov.io/gh/nqngo/midgard-discord)
 
 **Midgard** is a private OpenStack cloud for VAIT testing, training, and development purpose. This project aims to simplify and allow quick provisioning of OpenStack VM using an opinionated workflow entirely through Discord, following a ChatOps model.
 
@@ -27,7 +30,7 @@ The software architecture for the bot is as followed:
 Run the bot with the following command:
 
 ```bash
-poetry run midgard
+poetry run midgard-bot
 ```
 
 ## Contributing

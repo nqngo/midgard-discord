@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from midgard_discord import commands
@@ -87,7 +88,6 @@ async def test_add_portforward(
     )
 
     create_dns_record_networking_patch.assert_called_once()
-
     get_tunnel_config_networking_patch.assert_called_once()
     add_tunnel_config_networking_patch.assert_called_once()
     update_tunnel_config_networking_patch.assert_called_once()
@@ -100,7 +100,7 @@ async def test_add_portforward(
             server_ip=find_server_cloud_patch_some_server.return_value.addresses[
                 "default"
             ][0]["addr"],
-            hostname=create_dns_record_networking_patch.return_value.hostname,
+            hostname=f"{user.username}-{http_protocol}-{http_port}.{os.getenv('CF_DOMAIN')}",
         ),
         emphemeral=True,
         suppress_embeds=True,

@@ -4,8 +4,6 @@ import interactions
 import openstack
 import sqlalchemy
 
-from datetime import datetime
-
 from midgard_discord import cloud
 from midgard_discord import database
 from midgard_discord import networking
@@ -185,7 +183,7 @@ async def add_portforward(
             if ip["OS-EXT-IPS:type"] == "floating"
         ][0]
         service = f"{protocol}://{public_ip}:{port}"
-        hostname = f"{user.username}-{protocol}-{port}"
+        hostname = f"{user.username}-{protocol}-{port}.{os.getenv('CF_DOMAIN')}"
         networking.add_tunnel_config(tunnels, service, hostname)
         await networking.update_tunnel_config(tunnels)
         await networking.create_dns_record(hostname)
@@ -205,6 +203,73 @@ async def add_portforward(
         await ctx.send(f"<@{ctx.author.user.id}> {e}")
 
 
-async def server_create():
+async def create_server(
+    ctx: interactions.CommandContext,
+    user: database.OpenStackCredential,
+    os_client: openstack.connection.Connection,
+    flavor_id: str,
+    image_id: str,
+):
     """Create a server."""
-    pass
+    if user is None:
+        return await ctx.send(
+            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
+        )
+    server = await cloud.find_server(os_client)
+    if server is not None:
+        public_ip = [
+            ip["addr"]
+            for ip in server.addresses["default"]
+            if ip["OS-EXT-IPS:type"] == "floating"
+        ][0]
+        return await ctx.send(
+            texts.ERROR_SERVER_ALREADY_EXISTS.format(
+                discord_user_id=ctx.author.user.id,
+                server_name=server.name,
+                server_ip=public_ip,
+                hostname=f"{ctx.author.user.id}-ssh.{os.getenv('CF_DOMAIN')}",
+            ),
+            suppress_embeds=True,
+        )
+    keypair = await cloud.find_keypair(os_client)
+    if keypair is None:
+        return await ctx.send(
+            texts.ERROR_KEYPAIR_NOT_FOUND.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
+        )
+    try:
+        security_group = await cloud.find_default_security_group(os_client)
+        server = await cloud.create_server(
+            os_client,
+            key_name=keypair.name,
+            flavor=flavor_id,
+            image=image_id,
+            auto_ip=True,
+            security_groups=[security_group.name],
+            reuse_ips=True,
+            wait=True,
+        )
+        tunnels = await networking.get_tunnel_config()
+        await cloud.add_security_group_rule(os_client, 22)
+        public_ip = [
+            ip["addr"]
+            for ip in server.addresses["default"]
+            if ip["OS-EXT-IPS:type"] == "floating"
+        ][0]
+        service = f"ssh://{public_ip}:22"
+        hostname = f"{user.username}-ssh.{os.getenv('CF_DOMAIN')}"
+        networking.add_tunnel_config(tunnels, service, hostname)
+        await networking.update_tunnel_config(tunnels)
+        await networking.create_dns_record(hostname)
+        await ctx.send(
+            texts.SERVER_CREATED.format(
+                discord_user_id=ctx.author.user.id,
+                server_name=server.name,
+                server_ip=public_ip,
+                hostname=hostname,
+            ),
+            suppress_embeds=True,
+        )
+    except Exception as e:
+        await ctx.send(f"<@{ctx.author.user.id}> {e}")

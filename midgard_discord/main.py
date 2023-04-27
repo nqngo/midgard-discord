@@ -216,15 +216,14 @@ async def server(ctx: interactions.CommandContext):
 @interactions.autodefer()
 async def server_create(ctx: interactions.CommandContext, flavor: str, image: str):
     """Create a VM server"""
+    utils.log(ctx.author.name, f"/midgard server create flavor:{flavor} image:{image}")
     db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
     user = await database.find_user(db_session, str(ctx.author.user.id))
 
-    if user is None:
-        await ctx.send(
-            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id)
-        )
-    else:
-        os_client = cloud.connect(
+    os_client = (
+        cloud.connect()
+        if user is None
+        else cloud.connect(
             auth_url=os.getenv("OS_AUTH_URL"),
             region_name=os.getenv("OS_REGION_NAME"),
             project_name=user.project_name,
@@ -233,63 +232,9 @@ async def server_create(ctx: interactions.CommandContext, flavor: str, image: st
             user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
             project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
         )
+    )
 
-        server = await cloud.find_server(os_client)
-        if server is not None:
-            if server.status == "ACTIVE":
-                await ctx.send(
-                    f"<@{ctx.author.user.id}> Your server is already running."
-                )
-            else:
-                await ctx.send(
-                    f"<@{ctx.author.user.id}> Your server is in STATUS {server.status}."
-                )
-        else:
-            keypair = await cloud.find_keypair(os_client)
-            security_group = await cloud.find_default_security_group(os_client)
-            try:
-                # Check if keypair exists
-                if keypair is None:
-                    raise Exception(
-                        texts.ERROR_KEYPAIR_NOT_FOUND.format(
-                            discord_user_id=ctx.author.user.id
-                        )
-                    )
-                # Create a Nova server
-                server = await cloud.create_server(
-                    os_client,
-                    key_name=keypair.name,
-                    flavor=flavor,
-                    image=image,
-                    auto_ip=True,
-                    security_groups=[security_group.name],
-                    reuse_ips=True,
-                    wait=True,
-                )
-                # Set up SSH tunnel
-                tunnels = await networking.get_tunnel_config()
-                await cloud.add_security_group_rule(os_client, 22)
-                public_ip = [
-                    ip["addr"]
-                    for ip in server.addresses["default"]
-                    if ip["OS-EXT-IPS:type"] == "floating"
-                ][0]
-                service = f"ssh://{public_ip}:22"
-                hostname = f"{user.username}-ssh.{os.getenv('CF_DOMAIN')}"
-                networking.add_tunnel_config(tunnels, service, hostname)
-                await networking.update_tunnel_config(tunnels)
-                await networking.create_dns_record(hostname)
-                await ctx.send(
-                    texts.SERVER_CREATED.format(
-                        discord_user_id=ctx.author.user.id,
-                        server_name=server.name,
-                        server_id=server.id,
-                        hostname=hostname,
-                    ),
-                    ephemeral=True,
-                )
-            except Exception as e:
-                await ctx.send(f"<@{ctx.author.user.id}> {e}")
+    await commands.create_server(ctx, user, os_client, flavor, image)
 
     # Close database connection
     await db_engine.dispose()

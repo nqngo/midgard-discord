@@ -73,7 +73,7 @@ PORT_FORWARDED = (
 <@{discord_user_id}> `{protocol}://{server_ip}:{port}` successfully forwarded.
 Access it at:
 
-https://{discord_user_id}-{protocol}-{port}.midgardlab.io
+https://{hostname}
 """
     + INFO_MORE
 )
@@ -97,7 +97,20 @@ ERROR_NOT_REGISTERED = (
 
 ERROR_SERVER_NOT_FOUND = (
     """
-<@{discord_user_id}> You do not have any server. Please create a server by running `/midgard server launch`.
+<@{discord_user_id}> You do not have any server. Please create a server by running `/midgard server create`.
+"""
+    + INFO_MORE
+)
+
+ERROR_SERVER_ALREADY_EXISTS = (
+    """
+<@{discord_user_id}> Your server already exists. To access your server, add the following to your `~/.ssh/config` file:
+```
+Host {server_name}
+    HostName {server_ip}
+    ProxyCommand /usr/local/bin/cloudflared access ssh --hostname {hostname}
+```
+Then you can access your server by running `ssh {server_name}`.
 """
     + INFO_MORE
 )

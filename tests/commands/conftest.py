@@ -1,3 +1,4 @@
+import os
 import datetime
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
@@ -6,6 +7,11 @@ import interactions
 import openstack
 
 from midgard_discord import database
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_env():
+    os.environ["CF_DOMAIN"] = "midgard.io"
 
 
 @pytest.fixture
@@ -58,6 +64,18 @@ def http_port():
 def http_protocol():
     """Protocol."""
     return "http"
+
+
+@pytest.fixture
+def flavor_id():
+    """Flavor ID."""
+    return "1234"
+
+
+@pytest.fixture
+def image_id():
+    """Image ID."""
+    return "5678"
 
 
 @pytest.fixture
@@ -297,4 +315,26 @@ def update_tunnel_config_networking_patch():
 @pytest.fixture
 def create_dns_record_networking_patch():
     with patch("midgard_discord.networking.create_dns_record") as mock:
+        yield mock
+
+
+@pytest.fixture
+def create_server_cloud_patch():
+    server = MagicMock(openstack.compute.v2.server.Server)
+    server.id = "444"
+    server.name = "test_server"
+    server.addresses = {
+        "default": [
+            {
+                "addr": "192.168.0.8",
+                "OS-EXT-IPS:type": "floating",
+            },
+            {
+                "addr": "10.0.0.8",
+                "OS-EXT-IPS:type": "fixed",
+            },
+        ]
+    }
+
+    with patch("midgard_discord.cloud.create_server", return_value=server) as mock:
         yield mock
