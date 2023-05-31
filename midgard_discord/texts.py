@@ -50,8 +50,23 @@ SERVER_CREATED = (
 <@{discord_user_id}> Your server has been successfully created. To access your server, add the following to your `~/.ssh/config` file:
 ```
 Host {server_name}
-    HostName {server_ip}
-    ProxyCommand /usr/local/bin/cloudflared access ssh --hostname {hostname}
+    User {image_user}
+    HostName {hostname}
+    ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
+```
+Then you can access your server by running `ssh {server_name}`.
+"""
+    + INFO_MORE
+)
+
+SERVER_REBUILT = (
+    """
+<@{discord_user_id}> Your server has been successfully rebuilt. To access your server, update your instance ssh config in `~/.ssh/config`:
+```
+Host {server_name}
+    User {image_user}
+    HostName {hostname}
+    ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
 ```
 Then you can access your server by running `ssh {server_name}`.
 """

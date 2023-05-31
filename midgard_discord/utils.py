@@ -22,6 +22,6 @@ def generate_password(length: int = 32):
 
 
 def log(who: str, event: str) -> None:
-    now = datetime.now()
+    now = datetime.datetime.now()
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] <{who}> {event}")

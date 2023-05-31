@@ -266,10 +266,40 @@ async def create_server(
             texts.SERVER_CREATED.format(
                 discord_user_id=ctx.author.user.id,
                 server_name=server.name,
-                server_ip=public_ip,
                 hostname=hostname,
             ),
             suppress_embeds=True,
         )
     except Exception as e:
         await ctx.send(f"<@{ctx.author.user.id}> {e}")
+
+
+async def rebuild_server(
+    ctx: interactions.CommandContext,
+    user: database.OpenStackCredential,
+    os_client: openstack.connection.Connection,
+    flavor_id: str,
+    image_id: str,
+):
+    """Rebuild a server."""
+    if user is None:
+        return await ctx.send(
+            texts.ERROR_NOT_REGISTERED.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
+        )
+    server = await cloud.find_server(os_client)
+    if server is None:
+        return await ctx.send(
+            texts.ERROR_SERVER_NOT_FOUND.format(discord_user_id=ctx.author.user.id),
+            suppress_embeds=True,
+        )
+    try:
+        await cloud.rebuild_server(os_client, flavor_id, image_id)
+        await ctx.send(
+            texts.SERVER_REBUILT.format(
+                discord_user_id=ctx.author.user.id, server_name=server.name
+            ),
+            suppress_embeds=True,
+        )
+    except Exception as e:
+        await ctx.send(f"<@{ctx.author.user.id}> {e}")        

@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from midgard_discord import cloud
 from midgard_discord import commands
 from midgard_discord import database
-from midgard_discord import networking
 from midgard_discord import texts
 from midgard_discord import utils
 
@@ -239,6 +238,55 @@ async def server_create(ctx: interactions.CommandContext, flavor: str, image: st
     # Close database connection
     await db_engine.dispose()
     os_client.close()
+
+
+@server.subcommand(
+    name="rebuild",
+    description="Rebuild a VM server",
+    options=[
+        interactions.Option(
+            name="flavor",
+            description="The flavor of the server",
+            type=interactions.OptionType.STRING,
+            required=True,
+            autocomplete=True,
+        ),
+        interactions.Option(
+            name="image",
+            description="The image of the server",
+            type=interactions.OptionType.STRING,
+            required=True,
+            autocomplete=True,
+        ),
+    ],
+)
+@interactions.autodefer()
+async def server_rebuild(ctx: interactions.CommandContext, flavor: str, image: str):
+    """Create a VM server"""
+    utils.log(ctx.author.name, f"/midgard server create flavor:{flavor} image:{image}")
+    db_engine, db_session = await database.init_async_db(os.getenv("DB_URI"))
+    user = await database.find_user(db_session, str(ctx.author.user.id))
+
+    os_client = (
+        None
+        if user is None
+        else cloud.connect(
+            auth_url=os.getenv("OS_AUTH_URL"),
+            region_name=os.getenv("OS_REGION_NAME"),
+            project_name=user.project_name,
+            username=user.username,
+            password=user.password,
+            user_domain=os.getenv("OS_USER_DOMAIN_NAME"),
+            project_domain=os.getenv("OS_PROJECT_DOMAIN_NAME"),
+        )
+    )
+
+    await commands.rebuild_server(ctx, user, os_client, flavor, image)
+
+    # Close database connection
+    await db_engine.dispose()
+    os_client.close()
+
 
 
 @server_create.autocomplete("flavor")

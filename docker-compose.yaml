@@ -12,7 +12,7 @@ services:
   midgard:
     build: .
     environment:
-      DB_URI: postgres+asyncpg://user:password@db:5432/midgard
+      DB_URI: postgresql+asyncpg://user:password@db:5432/midgard
       DB_CACHE_TTL: ${DB_CACHE_TTL}
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_DEFAULT_GUILD_ID: ${DISCORD_DEFAULT_GUILD_ID}
