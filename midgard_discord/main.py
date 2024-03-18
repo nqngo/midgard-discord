@@ -288,7 +288,6 @@ async def server_rebuild(ctx: interactions.CommandContext, flavor: str, image: s
     os_client.close()
 
 
-
 @server_create.autocomplete("flavor")
 async def server_create_flavor_autocomplete(
     ctx: interactions.CommandContext, user_input: str = ""
