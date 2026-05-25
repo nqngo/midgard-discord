@@ -10,7 +10,6 @@ from midgard_discord import database
 from midgard_discord import texts
 from midgard_discord import utils
 
-
 # Setup discord API
 load_dotenv()
 
@@ -286,7 +285,6 @@ async def server_rebuild(ctx: interactions.CommandContext, flavor: str, image: s
     # Close database connection
     await db_engine.dispose()
     os_client.close()
-
 
 
 @server_create.autocomplete("flavor")
