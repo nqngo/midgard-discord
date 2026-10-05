@@ -302,4 +302,4 @@ async def rebuild_server(
             suppress_embeds=True,
         )
     except Exception as e:
-        await ctx.send(f"<@{ctx.author.user.id}> {e}")        
+        await ctx.send(f"<@{ctx.author.user.id}> {e}")
